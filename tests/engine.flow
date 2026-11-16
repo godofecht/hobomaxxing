@@ -1,4 +1,4 @@
-import "src/engine.flow"
+import "../src/engine.flow"
 
 function main() -> i32 {
     if score(5, 5, 5, 2, 1) != 91 { return 1 }

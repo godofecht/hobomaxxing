@@ -1,4 +1,4 @@
-import "src/engine.flow"
+import "engine.flow"
 import std.io { FileRead, io_read_text, io_write_file }
 import std.process {
     ProcCmd, ProcResult, proc_cmd, proc_arg, proc_run, proc_argc,
