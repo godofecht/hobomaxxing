@@ -26,3 +26,19 @@ Do not invoke Freebuff programmatically, schedule sessions, automate its
 web/CLI, scrape it, or call unofficial model endpoints. The user must
 start and supervise any Freebuff session. Do not attempt account or
 credit-limit workarounds.
+
+## When the human is using the computer
+
+The intended primary mode is a human-supervised coding session. The user may
+start `python3 -m hobomax dashboard` on their own machine, view the ranked
+queue, and copy a bounded multi-task packet into the official Freebuff
+application. The user remains actively present; Freebuff's own native agent
+may automate work after the human starts the session. Hobomaxxing does not
+control the external app, its ads, session initiation, or inference endpoints.
+
+`python3 -m hobomax session --top 5` emits the same structured task packet
+without a browser. After verification, the human can record progress with
+`python3 -m hobomax complete TASK_ID --evidence 'tests pass; PR URL'`, or
+use the dashboard's Mark verified button. Do not claim unverifiable work was
+completed. Finished task IDs are suppressed from the pending queue. Any
+subsequent new issue or new failed run may require a new candidate ID.

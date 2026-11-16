@@ -40,6 +40,41 @@ Failed CI is typically first, then bugs, reviews, local changes and TODOs.
 Impact, urgency, evidence confidence, estimated effort and risk are visible
 in the JSON report. It is a heuristic, not a claim that the task is correct.
 
+## Interactive desktop workbench
+
+This is primarily for **a human actively using the computer**, not a headless
+agent or ad avoidance system. The human keeps Freebuff's real application and
+its advertisements visible, starts each session themselves and remains present.
+Freebuff's own agent can then work autonomously *inside that session* through
+its intended features. Hobomaxxing never scripts Freebuff, opens unofficial
+model endpoints, or suppresses ads. Keeping ads visible does not by itself
+make an external bot permitted under Freebuff's terms.
+
+After configuring a private `hobomax.json` with authorized local Git roots
+and GitHub repositories, run:
+
+~~~sh
+python3 -m hobomax --config hobomax.json dashboard
+~~~
+
+The browser opens a local-only dashboard at `http://127.0.0.1:8765/`.
+Review ranked tasks, prepare a one-task or five-task prompt, copy it, and
+start your official Freebuff session. The page is bound to localhost, has
+no cloud backend, and never sends data to a model provider itself.
+
+For terminal workflows:
+
+~~~sh
+python3 -m hobomax --config hobomax.json session --top 5
+python3 -m hobomax --config hobomax.json complete TASK_ID --evidence "verified tests passed"
+~~~
+
+Completed tasks disappear from the pending plan and dashboard. Their evidence
+and timestamps remain local in `.hobomaxxing/state.json`; `scan` still includes
+the underlying raw discoveries. Revisit or clear state manually if a completed
+issue genuinely recurs. This implementation does not continuously monitor
+active presence and cannot establish compliance on the user's behalf.
+
 ## Agent workflow
 
 Point an assistant at this repository's [AGENTS.md](AGENTS.md). A human configures
@@ -95,7 +130,8 @@ set usage controls and enable dispatch only if you accept the quota risk.
 | Count local pending changes and find tracked TODO/FIXME locations | Implemented |
 | Read open GitHub issues, PRs and latest CI failures | Implemented; first page/sample only |
 | Rank and output a stable JSON task queue | Implemented |
-| Create a scoped task packet for human-started Freebuff or another agent | Implemented |
+| Create bounded one-task or multi-task packets for human-started coding sessions | Implemented |
+| Local browser dashboard with completion evidence ledger | Implemented, human supervised |
 | Run explicitly allowlisted commands and GitHub workflow dispatches | Implemented, opt-in |
 | Execute Freebuff unattended or bypass quotas | Not supported |
 | Discover every personal app/account automatically | Not implemented or authorized |

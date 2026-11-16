@@ -11,6 +11,7 @@ from .core import (
     build_report, execute_job, load_config, make_prompt, select_task,
     state_read, write_report
 )
+from .interactive import complete, make_session, pending_tasks, serve
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -35,6 +36,14 @@ def main(argv: list[str] | None = None) -> int:
     plan.add_argument("--top", type=int, default=15)
     handoff = sub.add_parser("prompt", help="Print a human-initiated AI agent task packet")
     handoff.add_argument("--task", default=None, help="Task ID; defaults to top ranked")
+    session = sub.add_parser("session", help="Create a multi-task, human-supervised agent handoff")
+    session.add_argument("--top", type=int, default=5)
+    dashboard = sub.add_parser("dashboard", help="Start the local interactive workbench")
+    dashboard.add_argument("--port", type=int, default=8765)
+    dashboard.add_argument("--no-browser", action="store_true")
+    finish = sub.add_parser("complete", help="Record verified task completion locally")
+    finish.add_argument("task_id")
+    finish.add_argument("--evidence", required=True, help="Tests, PR or other validation")
     run = sub.add_parser("run", help="Execute a specifically configured, due job")
     run.add_argument("job_id")
     run.add_argument("--approve", action="store_true", help="Explicit human authorization")
@@ -52,16 +61,24 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(json.dumps(result, indent=2))
             return 1 if result["status"] == "failed" else 0
-        report = build_report(config, state_read(state_path), github=not args.offline)
+        if args.command == "dashboard":
+            serve(args.config, state_path, args.offline, args.port, not args.no_browser)
+            return 0
+        state = state_read(state_path)
+        report = build_report(config, state, github=not args.offline)
+        pending = pending_tasks(report, state)
+        if args.command == "complete":
+            print(json.dumps(complete(state_path, report, args.task_id, args.evidence), indent=2))
+            return 0
         if args.command == "scan":
             print(json.dumps(report, indent=2))
         elif args.command == "plan":
             print(
                 str(len(report["inventory"]["local"])) + " local repositories; " +
                 str(len(report["inventory"]["github"])) + " GitHub repositories; " +
-                str(len(report["tasks"])) + " candidate tasks"
+                str(len(pending)) + " pending tasks"
             )
-            for item in report["tasks"][:max(0, args.top)]:
+            for item in pending[:max(0, args.top)]:
                 print(
                     str(item["priority"]).rjust(3) + "  " + item["id"] +
                     "  [" + item["kind"] + "] " + item["title"]
@@ -69,7 +86,9 @@ def main(argv: list[str] | None = None) -> int:
             for error in report["errors"]:
                 print("warning: " + error, file=sys.stderr)
         elif args.command == "prompt":
-            print(make_prompt(select_task(report, args.task)))
+            print(make_prompt(select_task({"tasks": pending}, args.task)))
+        elif args.command == "session":
+            print(make_session({"tasks": pending}, state, args.top))
         return 0
     except (ValueError, OSError, RuntimeError) as exc:
         print("hobo: " + str(exc), file=sys.stderr)
