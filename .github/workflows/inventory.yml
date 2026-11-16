@@ -1,0 +1,31 @@
+name: Public inventory (opt-in)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 9 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Sample publicly configured GitHub repositories
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p .hobomaxxing
+          python3 -m hobomax --config config.example.json scan > .hobomaxxing/inventory.json
+      - name: Upload private run artifact (not committed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory
+          path: .hobomaxxing/inventory.json
+          retention-days: 3
