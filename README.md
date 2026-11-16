@@ -39,13 +39,13 @@ flow run src/test_engine.flow
 
 `scan` emits machine-readable JSON when configured discovery sources succeed; `plan` shows ranked work. Tasks have stable identifiers, deterministic scoring, and fields for provenance, verification and an intended next action. The `complete` command records evidence in the local ignored `.hobomaxxing/completed.tsv` ledger and hides that task ID from subsequent work queues. Re-run `dashboard` to regenerate the static page.
 
-The configuraton uses a deliberately simple line-based format rather than a bespoke runtime JSON decoder. `root=` entries authorize local paths for Git discovery, `github=` entries authorize remote GitHub reads, and optional `job=` entries define exact argv-based commands. Job arguments are separated with `|` (no shell interpolation). Jobs are dry-run unless you pass `--approve`. Only configure programs and directories you trust; the runner is **not a secure sandbox**.
+The configuration uses a deliberately simple line-based format rather than a bespoke runtime JSON decoder. `root=` entries authorize local paths for Git discovery, `github=` entries authorize remote GitHub reads, and optional `job=` entries define exact argv-based commands. Job arguments are separated with `|` (no shell interpolation). Jobs are dry-run unless you pass `--approve`. Only configure programs and directories you trust; the runner is **not a secure sandbox**.
 
 ## Core design
 
 Flow's `std.process` invokes Git, find, and the official `gh api` using argv vectors and timeouts, without a shell. Local Git status and tracked TODO/FIXME locations and remote open issues/PRs plus recent CI failures become a bounded task queue. Priority scoring makes urgency, impact, evidence confidence, estimated effort and risk explicit.
 
-`std.io` manages the private completion ledger and generates the static workbench. A native Flow test covers ranking, slug validation, JSON escaping, sorting, completion filtering and task packets. GitHub Actions compiles and executes both the test and an offline CLI smoke check using the Flow compiler.
+`std.io` manages the private completion ledger and generates the static workbench. A native Flow test covers ranking, slug validation, JSON escaping, sorting, completion filtering and task packets. GitHub Actions compiles and executes both the test and an offline CLI smoke check using the Flow compiler pinned to a tested commit.
 
 ## Scope and limitations
 

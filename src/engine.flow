@@ -1,7 +1,7 @@
 import std.io { FileRead, io_read_text, io_write_file }
 import std.process {
     ProcCmd, ProcResult, proc_cmd, proc_arg, proc_run, proc_timeout_ms,
-    proc_env, proc_env_clear, proc_getenv, proc_which, proc_ok
+    proc_env, proc_env_clear, proc_getenv, proc_which, proc_ok, proc_cwd
 }
 import std.string { str_line_end, str_line_next }
 
@@ -350,6 +350,9 @@ export function scan_local(q: ptr<Queue>, cfg: ptr<Config>) -> void {
         proc_arg(command, "node_modules")
         proc_arg(command, "-o")
         proc_arg(command, "-name")
+        proc_arg(command, "_flow")
+        proc_arg(command, "-o")
+        proc_arg(command, "-name")
         proc_arg(command, ".venv")
         proc_arg(command, "-o")
         proc_arg(command, "-name")
@@ -649,6 +652,7 @@ export function execute_job(cfg: ptr<Config>, id: string, approve: bool) -> i32 
                 proc_arg(cmd, job.argv[arg])
                 arg = arg + 1
             }
+            proc_cwd(cmd, job.cwd)
             proc_env_clear(cmd)
             proc_env(cmd, "PATH", proc_getenv("PATH"))
             proc_env(cmd, "HOME", proc_getenv("HOME"))
