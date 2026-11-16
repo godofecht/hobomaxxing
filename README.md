@@ -14,9 +14,10 @@ Install [Flow](https://github.com/flooooooooooow/flow) 2.0, Git and the official
 git clone https://github.com/godofecht/hobomaxxing.git
 cd hobomaxxing
 cp config.example.conf hobomax.conf
+FLOW_BUILD_ROOT=build flow compile src/main.flow
 # Edit hobomax.conf to identify authorized local roots and GitHub repositories.
-flow run src/main.flow plan --config hobomax.conf
-flow run src/main.flow dashboard --config hobomax.conf
+./build/main plan --config hobomax.conf
+./build/main dashboard --config hobomax.conf
 ~~~
 
 The second command writes `.hobomaxxing/dashboard.html` and opens a browser when an opener is installed. It is a **static local workbench**, not a localhost service. You start your official Freebuff session yourself, keep the app and any ads visible, and paste the selected task packet. Its native agent can work under its own session rules while you supervise.
@@ -26,13 +27,13 @@ Freebuff currently prohibits external bots, scripts or unofficial endpoints oper
 ## Commands
 
 ~~~sh
-flow run src/main.flow --offline plan --config hobomax.conf
-flow run src/main.flow scan --config hobomax.conf
-flow run src/main.flow session --top 5 --config hobomax.conf
-flow run src/main.flow prompt --task TASK_ID --config hobomax.conf
-flow run src/main.flow complete TASK_ID --evidence "Verified tests and review"
-flow run src/main.flow run JOB_ID --config hobomax.conf
-flow run src/main.flow run JOB_ID --config hobomax.conf --approve
+./build/main --offline plan --config hobomax.conf
+./build/main scan --config hobomax.conf
+./build/main session --top 5 --config hobomax.conf
+./build/main prompt --task TASK_ID --config hobomax.conf
+./build/main complete TASK_ID --evidence "Verified tests and review"
+./build/main run JOB_ID --config hobomax.conf
+./build/main run JOB_ID --config hobomax.conf --approve
 flow run src/test_engine.flow
 ~~~
 

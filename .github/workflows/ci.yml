@@ -20,9 +20,11 @@ jobs:
       - name: Compile and run Flow tests
         run: ./_flow/flow run src/test_engine.flow
       - name: Offline CLI smoke test
-        run: ./_flow/flow run src/main.flow --offline plan --config config.example.conf
+        run: |
+          FLOW_BUILD_ROOT=build ./_flow/flow compile src/main.flow
+          ./build/main --offline plan --config config.example.conf
       - name: Offline dashboard smoke test
-        run: ./_flow/flow run src/main.flow --offline dashboard --no-open --config config.example.conf
+        run: ./build/main --offline dashboard --no-open --config config.example.conf
       - name: Reject Python application files
         run: |
           if find src ui -type f -name '*.py' | grep -q .; then

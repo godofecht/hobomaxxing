@@ -8,7 +8,7 @@ non-existent Flow functions are acceptable.
 Use the current [Flow language spec](https://github.com/flooooooooooow/flow/blob/main/docs/LANGUAGE_SPEC.md),
 `std.process` for argv-safe external command execution, and `std.io` for
 local files. Run `flow run src/test_engine.flow` and
-`flow run src/main.flow --offline plan --config config.example.conf`.
+`FLOW_BUILD_ROOT=build flow compile src/main.flow` then `./build/main --offline plan --config config.example.conf`.
 
 This is primarily a human-supervised workbench. The user is actively at the
 computer, starts official Freebuff sessions and sees its normal interface,

@@ -8,7 +8,7 @@ import std.string { ParseI64, str_parse_i64 }
 
 function usage() -> void {
     println("Hobomaxxing (Flow 2.0)")
-    println("Usage: flow run src/main.flow COMMAND [options]")
+    println("Usage: ./build/main COMMAND [options]")
     println("Commands: plan, scan, session, prompt, dashboard, complete, run")
     println("Options: --config PATH, --offline, --top N, --task ID")
     println("         --evidence TEXT, --approve, --no-open")
