@@ -1,0 +1,171 @@
+import "src/engine.flow"
+import std.io { FileRead, io_read_text, io_write_file }
+import std.process {
+    ProcCmd, ProcResult, proc_cmd, proc_arg, proc_run, proc_argc,
+    proc_argv, proc_which, proc_timeout_ms
+}
+import std.string { ParseI64, str_parse_i64 }
+
+function usage() -> void {
+    println("Hobomaxxing (Flow 2.0)")
+    println("Usage: flow run src/main.flow COMMAND [options]")
+    println("Commands: plan, scan, session, prompt, dashboard, complete, run")
+    println("Options: --config PATH, --offline, --top N, --task ID")
+    println("         --evidence TEXT, --approve, --no-open")
+}
+
+function ensure_state() -> bool {
+    let cmd: ptr<ProcCmd> = proc_cmd("mkdir")
+    proc_arg(cmd, "-p")
+    proc_arg(cmd, ".hobomaxxing")
+    proc_timeout_ms(cmd, 5000)
+    let result: ptr<ProcResult> = proc_run(cmd)
+    return result.exit_code == 0
+}
+
+function write_dashboard(q: ptr<Queue>, browser: bool) -> i32 {
+    let template: FileRead = io_read_text("ui/workbench.html")
+    if not template.ok {
+        println("hobo: ui/workbench.html is missing; run from repository root")
+        return 2
+    }
+    if not ensure_state() { return 2 }
+    let document: string = replace_first(
+        template.data, "__TASKS_JSON__", tasks_json(q, 1024)
+    )
+    let destination: string = ".hobomaxxing/dashboard.html"
+    if not io_write_file(destination, document) {
+        println("hobo: could not write dashboard")
+        return 2
+    }
+    println("Workbench written: " + destination)
+    println("Open that file in a browser; the official Freebuff app remains separate.")
+    if browser {
+        let mut opener: string = "open"
+        if eq(proc_which(opener), "") { opener = "xdg-open" }
+        if not eq(proc_which(opener), "") {
+            let cmd: ptr<ProcCmd> = proc_cmd(opener)
+            proc_arg(cmd, destination)
+            proc_timeout_ms(cmd, 5000)
+            let _r: ptr<ProcResult> = proc_run(cmd)
+        }
+    }
+    return 0
+}
+
+function print_plan(q: ptr<Queue>, max_items: i32) -> i32 {
+    let mut emitted: i32 = 0
+    let mut i: i32 = 0
+    while i < q[0].count and emitted < max_items {
+        let task: Task = q[0].items[i]
+        if not task.completed {
+            println(task.priority + "  " + task.id + "  [" +
+                    task.kind + "] " + task.title + " (" + task.resource + ")")
+            emitted = emitted + 1
+        }
+        i = i + 1
+    }
+    println("Pending tasks displayed: " + emitted)
+    return 0
+}
+
+function print_scan(q: ptr<Queue>) -> i32 {
+    println("{\"schema_version\":1,\"implementation\":\"flow\","
+            + "\"freebuff\":\"human-supervised\","
+            + "\"tasks\":" + tasks_json(q, 1024) + "}")
+    return 0
+}
+
+function command_main() -> i32 {
+    let mut command: string = ""
+    let mut config_path: string = "config.example.conf"
+    let mut offline: bool = false
+    let mut top: i32 = 15
+    let mut selected: string = ""
+    let mut evidence: string = ""
+    let mut approved: bool = false
+    let mut browser: bool = true
+    let mut i: i32 = 1
+    while i < proc_argc() {
+        let arg: string = proc_argv(i)
+        if eq(arg, "--config") and i + 1 < proc_argc() {
+            i = i + 1
+            config_path = proc_argv(i)
+        } elif eq(arg, "--offline") {
+            offline = true
+        } elif eq(arg, "--no-open") {
+            browser = false
+        } elif eq(arg, "--top") and i + 1 < proc_argc() {
+            i = i + 1
+            let n: ParseI64 = str_parse_i64(proc_argv(i))
+            if not n.ok or n.value < 1 or n.value > 1024 { return 2 }
+            top = n.value as i32
+        } elif eq(arg, "--task") and i + 1 < proc_argc() {
+            i = i + 1
+            selected = proc_argv(i)
+        } elif eq(arg, "--evidence") and i + 1 < proc_argc() {
+            i = i + 1
+            evidence = proc_argv(i)
+        } elif eq(arg, "--approve") {
+            approved = true
+        } elif eq(command, "") {
+            command = arg
+        } elif eq(selected, "") {
+            selected = arg
+        } else {
+            println("hobo: unrecognized argument " + arg)
+            return 2
+        }
+        i = i + 1
+    }
+    if eq(command, "help") or eq(command, "") {
+        usage()
+        return 0
+    }
+    let mut config: Config = read_config(config_path)
+    if not config.ok {
+        println("hobo: configuration invalid")
+        return 2
+    }
+    if eq(command, "run") {
+        if eq(selected, "") { return 2 }
+        return execute_job(&config, selected, approved)
+    }
+    let mut q: Queue = queue_new()
+    scan_local(&q, &config)
+    if not offline { scan_github(&q, &config) }
+    sort_tasks(&q)
+    apply_state(&q, ".hobomaxxing/completed.tsv")
+    if eq(command, "plan") {
+        return print_plan(&q, top)
+    }
+    if eq(command, "scan") {
+        return print_scan(&q)
+    }
+    if eq(command, "session") {
+        println(task_packet(&q, top, ""))
+        return 0
+    }
+    if eq(command, "prompt") {
+        println(task_packet(&q, 1, selected))
+        return 0
+    }
+    if eq(command, "dashboard") {
+        return write_dashboard(&q, browser)
+    }
+    if eq(command, "complete") {
+        if not ensure_state() { return 2 }
+        if save_completion(&q, selected, evidence, ".hobomaxxing/completed.tsv") {
+            println("Completion evidence recorded for " + selected)
+            return 0
+        }
+        println("hobo: task ID not found or invalid evidence")
+        return 2
+    }
+    usage()
+    return 2
+}
+
+function main() -> i32 {
+    return command_main()
+}

@@ -1,0 +1,29 @@
+import "src/engine.flow"
+
+function main() -> i32 {
+    if score(5, 5, 5, 2, 1) != 91 { return 1 }
+    if score(2, 2, 3, 2, 2) >= 91 { return 2 }
+    if score(10, 2, 3, 2, 2) != 0 { return 3 }
+    if not valid_slug("godofecht/hobomaxxing") { return 4 }
+    if valid_slug("bad value/repo") { return 5 }
+    if valid_slug("oops/../../etc") { return 6 }
+    if not eq(field("first|second|third", 124, 1), "second") { return 7 }
+    if not eq(trim("  hello  "), "hello") { return 8 }
+    if not eq(replace_first("a__X__c", "__X__", "b"), "abc") { return 9 }
+    if not eq(json_quote("<test>"), "\"\\u003ctest>\"") { return 10 }
+    if safe_job_command("sudo") { return 11 }
+    let mut q: Queue = queue_new()
+    enqueue(&q, "todo", "test", "a:1", "Review task", "", "verify", 2, 2, 3, 2, 2)
+    enqueue(&q, "github-ci", "test", "19", "Fix CI", "", "verify", 5, 5, 5, 2, 1)
+    sort_tasks(&q)
+    if not eq(q.items[0].kind, "github-ci") { return 12 }
+    if not eq(q.items[0].id, task_id("github-ci", "test", "19")) { return 13 }
+    let json: string = tasks_json(&q, 10)
+    if not starts(json, "[{\"id\":") { return 14 }
+    q.items[0].completed = true
+    if not starts(tasks_json(&q, 10), "[{\"id\":") { return 15 }
+    let packet: string = task_packet(&q, 10, "")
+    if not starts(packet, "HOBOMAXXING:") { return 16 }
+    println("Flow Hobomaxxing tests passed")
+    return 0
+}

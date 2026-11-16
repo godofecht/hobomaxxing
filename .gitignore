@@ -1,10 +1,7 @@
-hobomax.json
+hobomax.conf
 .hobomaxxing/
-inventory.json
-*.pyc
-__pycache__/
-.pytest_cache/
-dist/
+_flow/
 build/
-*.egg-info/
-.venv/
+flow_packages/
+flow.lock
+.DS_Store

@@ -1,24 +1,31 @@
-name: CI
-
+name: Flow CI
 on:
   push:
-    branches: [main, "feat/**"]
   pull_request:
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout Flow compiler
+        uses: actions/checkout@v4
         with:
-          python-version: "3.10"
-      - name: Unit tests
-        run: python3 -m unittest discover -s tests -v
-      - name: Offline smoke test
-        run: python3 -m hobomax --config config.example.json --offline plan
+          repository: flooooooooooow/flow
+          ref: main
+          path: _flow
+      - name: Compile and run Flow tests
+        run: ./_flow/flow run tests/engine.flow
+      - name: Offline CLI smoke test
+        run: ./_flow/flow run src/main.flow --offline plan --config config.example.conf
+      - name: Offline dashboard smoke test
+        run: ./_flow/flow run src/main.flow --offline dashboard --no-open --config config.example.conf
+      - name: Reject Python application files
+        run: |
+          if find src tests -type f -name '*.py' | grep -q .; then
+            echo "Python application source is forbidden"
+            exit 1
+          fi
