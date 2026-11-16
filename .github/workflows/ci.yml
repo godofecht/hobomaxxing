@@ -1,24 +1,41 @@
-name: CI
-
+name: Flow CI
 on:
   push:
-    branches: [main, "feat/**"]
   pull_request:
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout Flow compiler
+        uses: actions/checkout@v4
         with:
-          python-version: "3.10"
-      - name: Unit tests
-        run: python3 -m unittest discover -s tests -v
-      - name: Offline smoke test
-        run: python3 -m hobomax --config config.example.json --offline plan
+          repository: flooooooooooow/flow
+          ref: 7687fc936365e17bc6286415585c55fcc6ea64c3
+          path: _flow
+      - name: Compile and run Flow tests
+        run: ./_flow/flow run src/test_engine.flow
+      - name: Offline CLI smoke test
+        run: |
+          FLOW_BUILD_ROOT=build ./_flow/flow compile src/main.flow
+          ./build/main --offline plan --config config.example.conf
+      - name: Offline dashboard smoke test
+        run: ./build/main --offline dashboard --no-open --config config.example.conf
+      - name: Machine-readable JSON smoke test
+        run: |
+          ./build/main --offline scan --config config.example.conf > build/inventory.json
+          jq -e '.schema_version == 1 and .implementation == "flow" and (.tasks | type == "array")' build/inventory.json
+      - name: Approved local command smoke test
+        run: |
+          ./build/main run cwd-probe --config tests/job.conf
+          ./build/main run cwd-probe --config tests/job.conf --approve | grep -q '/src'
+      - name: Reject Python application files
+        run: |
+          if find src ui -type f -name '*.py' | grep -q .; then
+            echo "Python application source is forbidden"
+            exit 1
+          fi
