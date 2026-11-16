@@ -33,7 +33,7 @@ flow run src/main.flow prompt --task TASK_ID --config hobomax.conf
 flow run src/main.flow complete TASK_ID --evidence "Verified tests and review"
 flow run src/main.flow run JOB_ID --config hobomax.conf
 flow run src/main.flow run JOB_ID --config hobomax.conf --approve
-flow run tests/engine.flow
+flow run src/test_engine.flow
 ~~~
 
 `scan` emits machine-readable JSON when configured discovery sources succeed; `plan` shows ranked work. Tasks have stable identifiers, deterministic scoring, and fields for provenance, verification and an intended next action. The `complete` command records evidence in the local ignored `.hobomaxxing/completed.tsv` ledger and hides that task ID from subsequent work queues. Re-run `dashboard` to regenerate the static page.
