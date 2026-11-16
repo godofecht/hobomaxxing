@@ -37,7 +37,7 @@ Freebuff currently prohibits external bots, scripts or unofficial endpoints oper
 flow run src/test_engine.flow
 ~~~
 
-`scan` emits machine-readable JSON when configured discovery sources succeed; `plan` shows ranked work. Tasks have stable identifiers, deterministic scoring, and fields for provenance, verification and an intended next action. The `complete` command records evidence in the local ignored `.hobomaxxing/completed.tsv` ledger and hides that task ID from subsequent work queues. Re-run `dashboard` to regenerate the static page.
+`scan` emits machine-readable JSON on successful execution; source warnings go to stderr; `plan` shows ranked work. Tasks have stable identifiers, deterministic scoring, and fields for provenance, verification and an intended next action. The `complete` command records evidence in the local ignored `.hobomaxxing/completed.tsv` ledger and hides that task ID from subsequent work queues. Re-run `dashboard` to regenerate the static page.
 
 The configuration uses a deliberately simple line-based format rather than a bespoke runtime JSON decoder. `root=` entries authorize local paths for Git discovery, `github=` entries authorize remote GitHub reads, and optional `job=` entries define exact argv-based commands. Job arguments are separated with `|` (no shell interpolation). Jobs are dry-run unless you pass `--approve`. Only configure programs and directories you trust; the runner is **not a secure sandbox**.
 

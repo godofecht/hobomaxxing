@@ -25,6 +25,10 @@ jobs:
           ./build/main --offline plan --config config.example.conf
       - name: Offline dashboard smoke test
         run: ./build/main --offline dashboard --no-open --config config.example.conf
+      - name: Machine-readable JSON smoke test
+        run: |
+          ./build/main --offline scan --config config.example.conf > build/inventory.json
+          jq -e '.schema_version == 1 and .implementation == "flow" and (.tasks | type == "array")' build/inventory.json
       - name: Approved local command smoke test
         run: |
           ./build/main run cwd-probe --config tests/job.conf

@@ -10,6 +10,12 @@ extern {
     function strlen(s: string) -> i64
     function strcmp(a: string, b: string) -> i32
     function strncmp(a: string, b: string, n: i64) -> i32
+    function write(fd: i32, text: string, n: i64) -> i64
+}
+
+export function warn(message: string) -> void {
+    let line: string = message + "\n"
+    let _w: i64 = write(2, line, strlen(line))
 }
 
 export struct Task {
@@ -366,6 +372,7 @@ export function scan_local(q: ptr<Queue>, cfg: ptr<Config>) -> void {
         proc_arg(command, "-name")
         proc_arg(command, ".git")
         proc_arg(command, "-print")
+        proc_arg(command, "-prune")
         proc_timeout_ms(command, 15000)
         let result: ptr<ProcResult> = proc_run(command)
         if proc_ok(result) {
@@ -383,7 +390,7 @@ export function scan_local(q: ptr<Queue>, cfg: ptr<Config>) -> void {
                 pos = str_line_next(result.stdout, end)
             }
         } else {
-            println("hobo: warning: local discovery failed for " + root)
+            warn("hobo: warning: local discovery failed for " + root)
         }
         root_index = root_index + 1
     }
@@ -442,7 +449,7 @@ function scan_remote_records(q: ptr<Queue>, slug: string,
 
 export function scan_github(q: ptr<Queue>, cfg: ptr<Config>) -> void {
     if eq(proc_which("gh"), "") {
-        println("hobo: warning: GitHub CLI (gh) is not installed")
+        warn("hobo: warning: GitHub CLI (gh) is not installed")
         return
     }
     let mut i: i32 = 0
@@ -456,7 +463,7 @@ export function scan_github(q: ptr<Queue>, cfg: ptr<Config>) -> void {
         if proc_ok(issues) {
             scan_remote_records(q, slug, issues.stdout, "github-issue")
         } else {
-            println("hobo: warning: GitHub issues unavailable for " + slug)
+            warn("hobo: warning: GitHub issues unavailable for " + slug)
         }
         let pulls: ptr<ProcResult> = gh_api(
             path + "/pulls?state=open&per_page=100",
@@ -465,7 +472,7 @@ export function scan_github(q: ptr<Queue>, cfg: ptr<Config>) -> void {
         if proc_ok(pulls) {
             scan_remote_records(q, slug, pulls.stdout, "github-pr")
         } else {
-            println("hobo: warning: GitHub PRs unavailable for " + slug)
+            warn("hobo: warning: GitHub PRs unavailable for " + slug)
         }
         let workflows: ptr<ProcResult> = gh_api(
             path + "/actions/runs?per_page=20",
